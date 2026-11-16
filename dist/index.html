@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>考研政治刷题 · 四选一考点汇总</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%23c0392b'/%3E%3Ctext x='32' y='44' font-size='34' text-anchor='middle' fill='%23fff' font-family='serif' font-weight='bold'%3E%E6%94%BF%3C/text%3E%3C/svg%3E">
+<style>
+:root{
+  /* 纸墨 + 朱砂：考研政治的"书卷气" */
+  --paper: oklch(0.97 0.008 90);
+  --paper-2: oklch(0.945 0.012 90);
+  --ink: oklch(0.26 0.015 60);
+  --ink-2: oklch(0.45 0.015 60);
+  --ink-3: oklch(0.58 0.012 60);
+  --line: oklch(0.88 0.012 80);
+  --vermilion: oklch(0.52 0.16 35);
+  --vermilion-soft: oklch(0.95 0.03 40);
+  --green: oklch(0.5 0.11 155);
+  --green-soft: oklch(0.94 0.035 155);
+  --red: oklch(0.52 0.17 25);
+  --red-soft: oklch(0.94 0.03 25);
+  --radius: 12px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  font:16px/1.75 -apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+  color:var(--ink);background:var(--paper);-webkit-font-smoothing:antialiased;
+}
+:focus-visible{outline:2px solid var(--vermilion);outline-offset:2px;border-radius:4px}
+button{cursor:pointer;font:inherit;color:inherit}
+.wrap{max-width:46rem;margin:0 auto;padding:0 20px}
+.serif{font-family:"Songti SC","STSong","Noto Serif SC","SimSun",serif}
+
+/* ---------- 顶栏 ---------- */
+header.site{
+  position:sticky;top:0;z-index:10;
+  background:color-mix(in oklch,var(--paper) 88%,transparent);
+  backdrop-filter:blur(8px);
+  border-bottom:1px solid var(--line);
+}
+header.site .wrap{display:flex;align-items:center;gap:12px;min-height:60px}
+.seal{
+  flex:none;width:38px;height:38px;border-radius:8px;
+  display:grid;place-items:center;
+  background:var(--vermilion);color:oklch(0.98 0.01 90);
+  font-family:"Songti SC","STSong","Noto Serif SC",serif;
+  font-size:13px;font-weight:700;letter-spacing:0;line-height:1.05;text-align:center;
+}
+header.site h1{font-size:17px;font-weight:600;letter-spacing:.02em}
+header.site .sub{font-size:12px;color:var(--ink-3);margin-left:auto;white-space:nowrap}
+
+/* ---------- 通用 ---------- */
+main .wrap{padding-top:28px;padding-bottom:64px}
+.card{
+  background:var(--paper-2);border:1px solid var(--line);border-radius:var(--radius);
+  padding:24px;
+}
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  min-height:48px;padding:0 22px;border-radius:10px;border:1px solid transparent;
+  font-size:16px;font-weight:600;
+  transition:transform .15s ease-out,background .15s ease-out,box-shadow .15s ease-out;
+}
+.btn:active{transform:scale(.97)}
+.btn-primary{background:var(--vermilion);color:oklch(0.98 0.01 90)}
+.btn-primary:hover{background:oklch(0.48 0.16 35)}
+.btn-ghost{background:transparent;border-color:var(--line);color:var(--ink)}
+.btn-ghost:hover{border-color:var(--ink-3)}
+.btn[disabled]{opacity:.4;cursor:not-allowed}
+.btn[hidden]{display:none}
+
+/* ---------- 开始页 ---------- */
+.hero h2{font-size:clamp(24px,5vw,32px);font-weight:700;line-height:1.3;margin-bottom:8px}
+.hero p{color:var(--ink-2);margin-bottom:24px}
+.mode-list{display:grid;gap:10px;margin-bottom:24px}
+.mode{
+  display:flex;align-items:center;gap:14px;width:100%;text-align:left;
+  padding:14px 16px;border-radius:var(--radius);
+  border:1px solid var(--line);background:var(--paper-2);
+  transition:border-color .15s ease-out,background .15s ease-out,transform .15s ease-out;
+}
+.mode:hover{border-color:var(--vermilion)}
+.mode:active{transform:scale(.98)}
+.mode .tag{
+  flex:none;width:44px;height:44px;border-radius:10px;display:grid;place-items:center;
+  background:var(--vermilion-soft);color:var(--vermilion);
+  font-size:13px;font-weight:700;
+}
+.mode .name{font-weight:600;font-size:15px}
+.mode .meta{font-size:12px;color:var(--ink-3)}
+.tip{font-size:13px;color:var(--ink-3);border-top:1px dashed var(--line);padding-top:16px}
+
+/* ---------- 历史成绩 ---------- */
+.history{margin:8px 0 24px;border-top:1px dashed var(--line);padding-top:16px}
+.history-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.history-head h3{font-size:16px;font-weight:700}
+.btn-sm{min-height:34px;padding:0 14px;font-size:13px;font-weight:500}
+.history table{width:100%;border-collapse:collapse;font-size:14px}
+.history th,.history td{padding:8px 10px;text-align:left;border-bottom:1px solid var(--line)}
+.history th{font-size:12px;color:var(--ink-3);font-weight:600}
+.history td{color:var(--ink-2)}
+.history td b{color:var(--vermilion)}
+.history tbody tr:last-child td{border-bottom:none}
+@media (max-width:480px){
+  .history th:nth-child(5),.history td:nth-child(5){display:none}
+}
+
+/* ---------- 答题页 ---------- */
+.quiz-head{display:flex;align-items:center;gap:12px;margin-bottom:20px}
+.quiz-head .count{font-size:14px;color:var(--ink-2);font-variant-numeric:tabular-nums;white-space:nowrap}
+.progress{flex:1;height:6px;border-radius:999px;background:var(--line);overflow:hidden}
+.progress>i{display:block;height:100%;width:0;border-radius:999px;background:var(--vermilion);transition:width .25s ease-out}
+.q-section{
+  display:inline-block;font-size:12px;font-weight:600;color:var(--vermilion);
+  background:var(--vermilion-soft);border-radius:6px;padding:3px 10px;margin-bottom:12px;
+}
+.q-stem{font-size:18px;font-weight:600;line-height:1.7;margin-bottom:20px}
+.opts{display:grid;gap:10px}
+.opt{
+  display:flex;align-items:flex-start;gap:12px;width:100%;text-align:left;
+  min-height:48px;padding:12px 14px;border-radius:var(--radius);
+  border:1px solid var(--line);background:var(--paper-2);
+  transition:border-color .15s ease-out,background .15s ease-out,transform .1s ease-out;
+}
+.opt:not([disabled]):hover{border-color:var(--vermilion)}
+.opt:not([disabled]):active{transform:scale(.99)}
+.opt[disabled]{cursor:default}
+.opt .letter{
+  flex:none;width:26px;height:26px;border-radius:8px;display:grid;place-items:center;
+  border:1px solid var(--line);background:var(--paper);
+  font-size:13px;font-weight:700;color:var(--ink-2);
+  transition:inherit;
+}
+.opt .txt{flex:1;font-size:15px;line-height:1.6;padding-top:2px}
+.opt.correct{border-color:var(--green);background:var(--green-soft)}
+.opt.correct .letter{background:var(--green);border-color:var(--green);color:#fff}
+.opt.wrong{border-color:var(--red);background:var(--red-soft)}
+.opt.wrong .letter{background:var(--red);border-color:var(--red);color:#fff}
+
+.feedback{
+  margin-top:20px;border-radius:var(--radius);padding:16px 18px;
+  opacity:0;transform:translateY(6px);
+  transition:opacity .2s ease-out,transform .2s ease-out;
+}
+.feedback.show{opacity:1;transform:none}
+.feedback.ok{background:var(--green-soft);border:1px solid color-mix(in oklch,var(--green) 35%,transparent)}
+.feedback.no{background:var(--red-soft);border:1px solid color-mix(in oklch,var(--red) 35%,transparent)}
+.feedback .verdict{display:flex;align-items:center;gap:8px;font-weight:700;font-size:15px;margin-bottom:6px}
+.feedback.ok .verdict{color:var(--green)}
+.feedback.no .verdict{color:var(--red)}
+.feedback .verdict svg{flex:none}
+.feedback .exp{font-size:14px;color:var(--ink-2);line-height:1.7}
+.quiz-foot{display:flex;justify-content:flex-end;margin-top:20px}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* ---------- 结果页 ---------- */
+.score-ring{display:flex;align-items:baseline;gap:6px;margin:8px 0 4px}
+.score-ring .big{font-size:56px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1;color:var(--vermilion)}
+.score-ring .den{color:var(--ink-3);font-size:18px}
+.stat-row{display:flex;gap:16px;flex-wrap:wrap;margin:12px 0 20px;color:var(--ink-2);font-size:14px}
+.stat-row b{color:var(--ink)}
+.wrong-list{display:grid;gap:10px;margin:16px 0 24px}
+.wrong-item{
+  width:100%;text-align:left;display:block;
+  padding:12px 14px;border-radius:10px;border:1px solid var(--line);background:var(--paper);
+  font-size:14px;color:var(--ink-2);line-height:1.6;
+  transition:border-color .15s ease-out;
+}
+.wrong-item:hover{border-color:var(--red)}
+.wrong-item .n{color:var(--red);font-weight:700;margin-right:6px}
+.result-actions{display:flex;gap:12px;flex-wrap:wrap}
+</style>
+</head>
+<body>
+<header class="site">
+  <div class="wrap">
+    <div class="seal">考<br>研</div>
+    <h1>政治刷题 · 四选一考点汇总</h1>
+    <span class="sub">共 98 题</span>
+  </div>
+</header>
+<main>
+  <div class="wrap" id="app"><noscript>需要启用 JavaScript 才能刷题。</noscript></div>
+</main>
+<script src="./src/main.js"></script>
+</body>
+</html>

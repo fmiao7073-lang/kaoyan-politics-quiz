@@ -92,6 +92,21 @@ main .wrap{padding-top:28px;padding-bottom:64px}
 .mode .meta{font-size:12px;color:var(--ink-3)}
 .tip{font-size:13px;color:var(--ink-3);border-top:1px dashed var(--line);padding-top:16px}
 
+/* ---------- 历史成绩 ---------- */
+.history{margin:8px 0 24px;border-top:1px dashed var(--line);padding-top:16px}
+.history-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.history-head h3{font-size:16px;font-weight:700}
+.btn-sm{min-height:34px;padding:0 14px;font-size:13px;font-weight:500}
+.history table{width:100%;border-collapse:collapse;font-size:14px}
+.history th,.history td{padding:8px 10px;text-align:left;border-bottom:1px solid var(--line)}
+.history th{font-size:12px;color:var(--ink-3);font-weight:600}
+.history td{color:var(--ink-2)}
+.history td b{color:var(--vermilion)}
+.history tbody tr:last-child td{border-bottom:none}
+@media (max-width:480px){
+  .history th:nth-child(5),.history td:nth-child(5){display:none}
+}
+
 /* ---------- 答题页 ---------- */
 .quiz-head{display:flex;align-items:center;gap:12px;margin-bottom:20px}
 .quiz-head .count{font-size:14px;color:var(--ink-2);font-variant-numeric:tabular-nums;white-space:nowrap}

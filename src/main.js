@@ -144,7 +144,39 @@ const state = {
   score: 0,
   wrong: [],     // 答错的题目对象
   answered: false,
+  startTime: 0,  // 本轮开始时间戳
+  modeName: "",  // 本轮模式名称
 };
+
+// ---------------- 历史成绩（localStorage，仅存于当前浏览器） ----------------
+const HISTORY_KEY = "zz-quiz-history";
+
+function loadHistory(){
+  try { return JSON.parse(localStorage.getItem(HISTORY_KEY)) || []; }
+  catch { return []; }
+}
+
+function saveRecord(rec){
+  try {
+    const list = loadHistory();
+    list.unshift(rec);
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(list.slice(0, 100)));
+  } catch { /* 隐私模式等场景下静默失败 */ }
+}
+
+function clearHistory(){
+  try { localStorage.removeItem(HISTORY_KEY); } catch {}
+}
+
+function fmtTime(ts){
+  const d = new Date(ts);
+  const p = n => String(n).padStart(2, "0");
+  return `${d.getMonth()+1}月${d.getDate()}日 ${p(d.getHours())}:${p(d.getMinutes())}`;
+}
+
+function fmtDur(sec){
+  return sec < 60 ? `${sec}秒` : `${Math.floor(sec/60)}分${sec%60}秒`;
+}
 
 // 组卷：题序乱序 + 选项乱序
 function buildDeck(pool){
@@ -175,6 +207,29 @@ function renderStart(){
         <span><span class="name">${name}</span><br><span class="meta">板块内乱序出题</span></span>
       </button>`;
   }).join("");
+
+  const history = loadHistory();
+  const historyHtml = history.length ? `
+      <div class="history">
+        <div class="history-head">
+          <h3>历史成绩</h3>
+          <button class="btn btn-ghost btn-sm" id="clear-history">清空记录</button>
+        </div>
+        <table>
+          <thead><tr><th>时间</th><th>模式</th><th>得分</th><th>正确率</th><th>用时</th></tr></thead>
+          <tbody>
+            ${history.map(h => `
+              <tr>
+                <td>${fmtTime(h.t)}</td>
+                <td>${h.mode}</td>
+                <td><b>${h.score}</b> / ${h.total}</td>
+                <td>${Math.round(h.score/h.total*100)}%</td>
+                <td>${fmtDur(h.dur)}</td>
+              </tr>`).join("")}
+          </tbody>
+        </table>
+      </div>` : "";
+
   app.appendChild(el(`
     <div class="hero">
       <h2 class="serif">今天复习的考点，<br>刷一遍就知道牢不牢。</h2>
@@ -186,21 +241,29 @@ function renderStart(){
         </button>
         ${sectionBtns}
       </div>
-      <p class="tip">答题记录只保存在本次会话中，刷新页面后重新开始。</p>
+      ${historyHtml}
+      <p class="tip">历史成绩保存在本浏览器中，清理浏览器数据后记录会消失。</p>
     </div>`));
   app.querySelectorAll(".mode").forEach(b => b.addEventListener("click", () => {
     const pool = b.dataset.mode === "all"
       ? QUESTIONS
       : QUESTIONS.filter(q => q.s === Number(b.dataset.sec));
-    startQuiz(pool);
+    startQuiz(pool, b.dataset.mode === "all" ? "全套乱序" : SECTIONS[Number(b.dataset.sec)]);
   }));
+  const clearBtn = app.querySelector("#clear-history");
+  if(clearBtn) clearBtn.addEventListener("click", () => {
+    clearHistory();
+    renderStart();
+  });
 }
 
-function startQuiz(pool){
+function startQuiz(pool, modeName){
   state.deck = buildDeck(pool);
   state.idx = 0;
   state.score = 0;
   state.wrong = [];
+  state.startTime = Date.now();
+  state.modeName = modeName || "错题重练";
   renderQuestion();
 }
 
@@ -277,6 +340,13 @@ function next(){
 function renderResult(){
   const total = state.deck.length;
   const pct = Math.round(state.score/total*100);
+  saveRecord({
+    t: Date.now(),
+    mode: state.modeName,
+    total,
+    score: state.score,
+    dur: Math.round((Date.now() - state.startTime) / 1000),
+  });
   app.innerHTML = "";
   app.appendChild(el(`
     <div class="card">
