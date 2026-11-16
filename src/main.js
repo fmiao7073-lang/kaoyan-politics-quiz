@@ -174,6 +174,33 @@ function fmtTime(ts){
   return `${d.getMonth()+1}月${d.getDate()}日 ${p(d.getHours())}:${p(d.getMinutes())}`;
 }
 
+// 正确率趋势图（纯 SVG，无依赖；history 为最新在前）
+function trendSvg(history){
+  const pts = history.slice(0, 20).reverse().map(h => Math.round(h.score/h.total*100));
+  if(!pts.length) return "";
+  const W = 600, H = 170, padL = 36, padR = 14, padT = 14, padB = 26;
+  const iw = W - padL - padR, ih = H - padT - padB;
+  const x = i => pts.length === 1 ? padL + iw/2 : padL + iw * i / (pts.length - 1);
+  const y = v => padT + ih * (1 - v/100);
+  const grid = [0,50,100].map(v => `
+    <line x1="${padL}" y1="${y(v)}" x2="${W-padR}" y2="${y(v)}" stroke="var(--line)" stroke-width="1"/>
+    <text x="${padL-8}" y="${y(v)+4}" text-anchor="end" font-size="11" fill="var(--ink-3)">${v}%</text>`).join("");
+  const line = pts.length > 1
+    ? `<polyline points="${pts.map((v,i) => `${x(i)},${y(v)}`).join(" ")}" fill="none" stroke="var(--vermilion)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>`
+    : "";
+  const dots = pts.map((v,i) => `
+    <circle cx="${x(i)}" cy="${y(v)}" r="4" fill="var(--vermilion)"/>
+    <text x="${x(i)}" y="${y(v)-9}" text-anchor="middle" font-size="11" font-weight="600" fill="var(--ink-2)">${v}</text>`).join("");
+  const xlabels = pts.map((_,i) => `<text x="${x(i)}" y="${H-8}" text-anchor="middle" font-size="10" fill="var(--ink-3)">${i+1}</text>`).join("");
+  return `
+    <div class="trend">
+      <svg viewBox="0 0 ${W} ${H}" role="img" aria-label="最近 ${pts.length} 次正确率趋势">
+        ${grid}${line}${dots}${xlabels}
+        <text x="${padL}" y="${H-8}" text-anchor="start" font-size="10" fill="var(--ink-3)">次数（旧→新）</text>
+      </svg>
+    </div>`;
+}
+
 function fmtDur(sec){
   return sec < 60 ? `${sec}秒` : `${Math.floor(sec/60)}分${sec%60}秒`;
 }
@@ -209,26 +236,29 @@ function renderStart(){
   }).join("");
 
   const history = loadHistory();
-  const historyHtml = history.length ? `
+  const historyHtml = `
       <div class="history">
         <div class="history-head">
           <h3>历史成绩</h3>
-          <button class="btn btn-ghost btn-sm" id="clear-history">清空记录</button>
+          ${history.length ? `<button class="btn btn-ghost btn-sm" id="clear-history">清空记录</button>` : ""}
         </div>
-        <table>
-          <thead><tr><th>时间</th><th>模式</th><th>得分</th><th>正确率</th><th>用时</th></tr></thead>
-          <tbody>
-            ${history.map(h => `
-              <tr>
-                <td>${fmtTime(h.t)}</td>
-                <td>${h.mode}</td>
-                <td><b>${h.score}</b> / ${h.total}</td>
-                <td>${Math.round(h.score/h.total*100)}%</td>
-                <td>${fmtDur(h.dur)}</td>
-              </tr>`).join("")}
-          </tbody>
-        </table>
-      </div>` : "";
+        ${history.length ? `
+          ${trendSvg(history)}
+          <table>
+            <thead><tr><th>时间</th><th>模式</th><th>得分</th><th>正确率</th><th>用时</th></tr></thead>
+            <tbody>
+              ${history.map(h => `
+                <tr>
+                  <td>${fmtTime(h.t)}</td>
+                  <td>${h.mode}</td>
+                  <td><b>${h.score}</b> / ${h.total}</td>
+                  <td>${Math.round(h.score/h.total*100)}%</td>
+                  <td>${fmtDur(h.dur)}</td>
+                </tr>`).join("")}
+            </tbody>
+          </table>`
+        : `<p class="history-empty">还没有刷题记录——完成任意一轮后，你的成绩和正确率趋势会显示在这里。</p>`}
+      </div>`;
 
   app.appendChild(el(`
     <div class="hero">
