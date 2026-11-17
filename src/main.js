@@ -236,10 +236,12 @@ const state = {
   answered: false,
   startTime: 0,  // 本轮开始时间戳
   modeName: "",  // 本轮模式名称
+  bankMode: false, // 是否为错题库模式
 };
 
 // ---------------- 历史成绩（localStorage，仅存于当前浏览器） ----------------
 const HISTORY_KEY = "zz-quiz-history";
+const WRONG_KEY = "zz-quiz-wrongbook";
 
 function loadHistory(){
   try { return JSON.parse(localStorage.getItem(HISTORY_KEY)) || []; }
@@ -256,6 +258,30 @@ function saveRecord(rec){
 
 function clearHistory(){
   try { localStorage.removeItem(HISTORY_KEY); } catch {}
+}
+
+// ---------------- 错题库（跨轮次累积，localStorage 持久化） ----------------
+function loadWrong(){
+  try { return JSON.parse(localStorage.getItem(WRONG_KEY)) || []; }
+  catch { return []; }
+}
+
+function saveWrong(list){
+  try { localStorage.setItem(WRONG_KEY, JSON.stringify(list)); } catch {}
+}
+
+// 收录错题（按题干去重，保存原始未打乱的选项与答案）
+function addWrong(q){
+  const list = loadWrong();
+  if(!list.some(w => w.q === q.q)){
+    list.unshift({s:q.s, q:q.q, o:q.o, a:q.a, e:q.e});
+    saveWrong(list);
+  }
+}
+
+// 错题库中答对后移出（消灭错题）
+function removeWrong(stem){
+  saveWrong(loadWrong().filter(w => w.q !== stem));
 }
 
 function fmtTime(ts){
@@ -350,6 +376,7 @@ function renderStart(){
         : `<p class="history-empty">还没有刷题记录——完成任意一轮后，你的成绩和正确率趋势会显示在这里。</p>`}
       </div>`;
 
+  const wrongCount = loadWrong().length;
   app.appendChild(el(`
     <div class="hero">
       <h2 class="serif">今天复习的考点，<br>刷一遍就知道牢不牢。</h2>
@@ -359,16 +386,25 @@ function renderStart(){
           <span class="tag">全部</span>
           <span><span class="name">全套乱序刷题</span><br><span class="meta">${QUESTIONS.length} 题 · 十八个板块混合</span></span>
         </button>
+        <button class="mode bank" data-mode="bank" ${wrongCount ? "" : "disabled"}>
+          <span class="tag">${wrongCount}题</span>
+          <span><span class="name">错题库</span><br><span class="meta">${wrongCount ? "答错自动收录，练对自动移出" : "还没有错题，答错的题会自动收进来"}</span></span>
+        </button>
         ${sectionBtns}
       </div>
       ${historyHtml}
-      <p class="tip">历史成绩保存在本浏览器中，清理浏览器数据后记录会消失。</p>
+      <p class="tip">历史成绩和错题库保存在本浏览器中，清理浏览器数据后记录会消失。</p>
     </div>`));
   app.querySelectorAll(".mode").forEach(b => b.addEventListener("click", () => {
-    const pool = b.dataset.mode === "all"
-      ? QUESTIONS
-      : QUESTIONS.filter(q => q.s === Number(b.dataset.sec));
-    startQuiz(pool, b.dataset.mode === "all" ? "全套乱序" : SECTIONS[Number(b.dataset.sec)]);
+    if(b.dataset.mode === "all"){
+      startQuiz(QUESTIONS, "全套乱序");
+    }else if(b.dataset.mode === "bank"){
+      const bank = loadWrong();
+      if(bank.length) startQuiz(bank, "错题库", true);
+    }else{
+      const sec = Number(b.dataset.sec);
+      startQuiz(QUESTIONS.filter(q => q.s === sec), SECTIONS[sec]);
+    }
   }));
   const clearBtn = app.querySelector("#clear-history");
   if(clearBtn) clearBtn.addEventListener("click", () => {
@@ -377,13 +413,14 @@ function renderStart(){
   });
 }
 
-function startQuiz(pool, modeName){
+function startQuiz(pool, modeName, bankMode){
   state.deck = buildDeck(pool);
   state.idx = 0;
   state.score = 0;
   state.wrong = [];
   state.startTime = Date.now();
   state.modeName = modeName || "错题重练";
+  state.bankMode = bankMode === true;
   renderQuestion();
 }
 
@@ -426,7 +463,13 @@ function pick(i){
   state.answered = true;
   const q = state.deck[state.idx];
   const ok = i === q.ans;
-  if(ok) state.score++; else state.wrong.push(q);
+  if(ok){
+    state.score++;
+    if(state.bankMode) removeWrong(q.q);  // 错题库中答对即移出
+  }else{
+    state.wrong.push(q);
+    addWrong(q);  // 答错自动收入错题库
+  }
 
   app.querySelectorAll(".opt").forEach((b,bi) => {
     b.disabled = true;
@@ -476,6 +519,7 @@ function renderResult(){
         <span>正确率 <b>${pct}%</b></span>
         <span>答对 <b>${state.score}</b></span>
         <span>答错 <b>${total-state.score}</b></span>
+        ${state.bankMode ? `<span>错题库剩余 <b>${loadWrong().length}</b> 题</span>` : ""}
       </div>
       ${state.wrong.length ? `
         <p style="font-weight:600;margin-bottom:4px">错题回顾（点任意一道可单独重练）：</p>

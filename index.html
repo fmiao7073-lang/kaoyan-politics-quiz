@@ -83,6 +83,12 @@ main .wrap{padding-top:28px;padding-bottom:64px}
 }
 .mode:hover{border-color:var(--vermilion)}
 .mode:active{transform:scale(.98)}
+.mode[disabled]{opacity:.55;cursor:not-allowed}
+.mode[disabled]:hover{border-color:var(--line)}
+.mode[disabled]:active{transform:none}
+.mode.bank{border-color:color-mix(in oklch,var(--red) 40%,var(--line));background:var(--red-soft)}
+.mode.bank .tag{background:var(--red);color:#fff}
+.mode.bank:not([disabled]):hover{border-color:var(--red)}
 .mode .tag{
   flex:none;width:44px;height:44px;border-radius:10px;display:grid;place-items:center;
   background:var(--vermilion-soft);color:var(--vermilion);
