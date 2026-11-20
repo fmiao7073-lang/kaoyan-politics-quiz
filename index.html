@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>考研政治刷题 · 四选一考点汇总</title>
+<title>考研政治刷题 · 单选多选考点汇总</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%23c0392b'/%3E%3Ctext x='32' y='44' font-size='34' text-anchor='middle' fill='%23fff' font-family='serif' font-weight='bold'%3E%E6%94%BF%3C/text%3E%3C/svg%3E">
 <style>
 :root{
@@ -147,6 +147,14 @@ main .wrap{padding-top:28px;padding-bottom:64px}
 .opt.correct .letter{background:var(--green);border-color:var(--green);color:#fff}
 .opt.wrong{border-color:var(--red);background:var(--red-soft)}
 .opt.wrong .letter{background:var(--red);border-color:var(--red);color:#fff}
+.opt.sel{border-color:var(--vermilion);background:var(--vermilion-soft)}
+.opt.sel .letter{background:var(--vermilion);border-color:var(--vermilion);color:#fff}
+.opt.shake{animation:shake .3s ease-out}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+.q-multi{
+  display:inline-block;font-size:12px;font-weight:600;color:var(--red);
+  background:var(--red-soft);border-radius:6px;padding:3px 10px;margin-bottom:12px;margin-left:6px;
+}
 
 .feedback{
   margin-top:20px;border-radius:var(--radius);padding:16px 18px;
@@ -161,7 +169,7 @@ main .wrap{padding-top:28px;padding-bottom:64px}
 .feedback.no .verdict{color:var(--red)}
 .feedback .verdict svg{flex:none}
 .feedback .exp{font-size:14px;color:var(--ink-2);line-height:1.7}
-.quiz-foot{display:flex;justify-content:flex-end;margin-top:20px}
+.quiz-foot{display:flex;justify-content:flex-end;gap:10px;margin-top:20px}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 
 /* ---------- 结果页 ---------- */
@@ -186,8 +194,8 @@ main .wrap{padding-top:28px;padding-bottom:64px}
 <header class="site">
   <div class="wrap">
     <div class="seal">考<br>研</div>
-    <h1>政治刷题 · 四选一考点汇总</h1>
-    <span class="sub">共 170 题</span>
+    <h1>政治刷题 · 单选多选考点汇总</h1>
+    <span class="sub">共 265 题</span>
   </div>
 </header>
 <main>
