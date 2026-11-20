@@ -400,6 +400,7 @@ function saveRecord(rec){
     list.unshift(rec);
     localStorage.setItem(HISTORY_KEY, JSON.stringify(list.slice(0, 100)));
   } catch { /* 隐私模式等场景下静默失败 */ }
+  syncBackground();
 }
 
 function clearHistory(){
@@ -422,12 +423,147 @@ function addWrong(q){
   if(!list.some(w => w.q === q.q)){
     list.unshift({s:q.s, q:q.q, o:q.o, a:q.a, e:q.e});
     saveWrong(list);
+    syncBackground();
   }
 }
 
 // 错题库中答对后移出（消灭错题）
 function removeWrong(stem){
   saveWrong(loadWrong().filter(w => w.q !== stem));
+  syncBackground();
+}
+
+// ---------------- 云同步（同步码即凭据，跨设备互通） ----------------
+const SYNC_API = "https://kwl2jowcbtbua.kimi.site";
+const SYNC_CODE_KEY = "zz-quiz-sync-code";
+const SYNC_TIME_KEY = "zz-quiz-sync-time";
+let autoSyncDone = false;
+
+function getSyncCode(){ try { return localStorage.getItem(SYNC_CODE_KEY) || ""; } catch { return ""; } }
+function setSyncCode(code){ try { localStorage.setItem(SYNC_CODE_KEY, code); } catch {} }
+function clearSyncCode(){ try { localStorage.removeItem(SYNC_CODE_KEY); } catch {} }
+function markSynced(){ try { localStorage.setItem(SYNC_TIME_KEY, String(Date.now())); } catch {} }
+function lastSyncTime(){ try { return Number(localStorage.getItem(SYNC_TIME_KEY)) || 0; } catch { return 0; } }
+
+// 合并：history 按 t+mode 去重（新在前，上限100）；wrongbook 按题干去重（本地优先）
+function mergeData(localH, localW, remoteH, remoteW){
+  const hMap = new Map();
+  [...(remoteH||[]), ...(localH||[])].forEach(h => {
+    if(h && typeof h.t === "number") hMap.set(h.t + "|" + h.mode, h);
+  });
+  const history = [...hMap.values()].sort((a,b) => b.t - a.t).slice(0, 100);
+  const wMap = new Map();
+  [...(remoteW||[]), ...(localW||[])].forEach(w => { if(w && w.q) wMap.set(w.q, w); });
+  return { history, wrongbook: [...wMap.values()] };
+}
+
+async function syncPull(code){
+  const r = await fetch(`${SYNC_API}/api/sync/${encodeURIComponent(code)}`);
+  if(r.status === 404) return null;
+  if(!r.ok) throw new Error("pull " + r.status);
+  return r.json();
+}
+
+async function syncPush(code, history, wrongbook){
+  const r = await fetch(`${SYNC_API}/api/sync/${encodeURIComponent(code)}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ history, wrongbook }),
+  });
+  if(!r.ok) throw new Error("push " + r.status);
+  return r.json();
+}
+
+// 全量同步：先拉远端，再读本地合并、存本地、推回远端（内部实现，勿直接调用）。
+// 注意：本地数据必须在拉取完成后读取，否则答题途中写入的成绩可能被旧快照覆盖。
+async function doSync(){
+  const code = getSyncCode();
+  if(!code) return false;
+  const remote = await syncPull(code);
+  const localH = loadHistory(), localW = loadWrong();
+  if(remote === null){
+    await syncPush(code, localH, localW);  // 云端还没有这个码：用本地数据初始化
+  }else{
+    const merged = mergeData(localH, localW, remote.history, remote.wrongbook);
+    try { localStorage.setItem(HISTORY_KEY, JSON.stringify(merged.history)); } catch {}
+    saveWrong(merged.wrongbook);
+    await syncPush(code, merged.history, merged.wrongbook);
+  }
+  markSynced();
+  return true;
+}
+
+// 串行化同步：答题中会连续触发多次同步，并发执行会用旧快照互相覆盖。
+// 正在同步时再调用则标记 pending，结束后以最新本地数据再补一轮。
+let syncRunning = false, syncPending = false;
+function syncNow(){
+  if(syncRunning){ syncPending = true; return Promise.resolve(false); }
+  syncRunning = true;
+  return doSync().finally(() => {
+    syncRunning = false;
+    if(syncPending){ syncPending = false; syncNow().catch(() => {}); }
+  });
+}
+
+// 静默后台同步（保存记录后调用，不阻塞答题）
+function syncBackground(){
+  if(!getSyncCode()) return;
+  syncNow().catch(() => {});
+}
+
+function syncCardHtml(){
+  const code = getSyncCode();
+  const t = lastSyncTime();
+  if(!code){
+    return `
+      <div class="sync-card">
+        <div class="history-head"><h3>云同步</h3></div>
+        <p class="sync-tip">设置一串同步码，手机和电脑输入同一个码，历史成绩和错题库就能互通。</p>
+        <div class="sync-row">
+          <input id="sync-code-input" type="text" maxlength="32" placeholder="4–32 位字母/数字，如 miao-2026" autocomplete="off">
+          <button class="btn btn-primary btn-sm" id="sync-enable">开启同步</button>
+        </div>
+        <p class="sync-status" id="sync-status"></p>
+      </div>`;
+  }
+  return `
+    <div class="sync-card">
+      <div class="history-head">
+        <h3>云同步</h3>
+        <button class="btn btn-ghost btn-sm" id="sync-disable">关闭同步</button>
+      </div>
+      <p class="sync-tip">同步码：<b>${code}</b>${t ? ` · 上次同步 ${fmtTime(t)}` : ""}</p>
+      <div class="sync-row">
+        <button class="btn btn-primary btn-sm" id="sync-now">立即同步</button>
+      </div>
+      <p class="sync-status" id="sync-status"></p>
+    </div>`;
+}
+
+function bindSyncCard(){
+  const status = app.querySelector("#sync-status");
+  const say = (txt, bad) => { if(status){ status.textContent = txt; status.classList.toggle("bad", !!bad); } };
+  // 只有还停留在首页时才重绘，避免用户已开始答题被跳回首页
+  const rerenderHome = () => { if(app.querySelector(".hero")) renderStart(); };
+  const enable = app.querySelector("#sync-enable");
+  if(enable) enable.addEventListener("click", async () => {
+    const code = (app.querySelector("#sync-code-input").value || "").trim();
+    if(!/^[A-Za-z0-9_-]{4,32}$/.test(code)){ say("同步码需为 4–32 位字母、数字、- 或 _", true); return; }
+    say("正在连接云端……");
+    setSyncCode(code);
+    try { await syncNow(); say("同步成功，记录已互通 ✓"); setTimeout(rerenderHome, 900); }
+    catch { clearSyncCode(); say("连接失败，请检查网络后重试", true); }
+  });
+  const now = app.querySelector("#sync-now");
+  if(now) now.addEventListener("click", async () => {
+    say("正在同步……");
+    try { await syncNow(); say("同步成功 ✓"); setTimeout(rerenderHome, 900); }
+    catch { say("同步失败，请检查网络后重试", true); }
+  });
+  const disable = app.querySelector("#sync-disable");
+  if(disable) disable.addEventListener("click", () => {
+    clearSyncCode(); renderStart();
+  });
 }
 
 function fmtTime(ts){
@@ -542,7 +678,8 @@ function renderStart(){
         ${sectionBtns}
       </div>
       ${historyHtml}
-      <p class="tip">历史成绩和错题库保存在本浏览器中，清理浏览器数据后记录会消失。</p>
+      ${syncCardHtml()}
+      <p class="tip">未开启云同步时，历史成绩和错题库只保存在本浏览器中，清理浏览器数据后记录会消失；开启云同步后可跨设备互通。</p>
     </div>`));
   app.querySelectorAll(".mode").forEach(b => b.addEventListener("click", () => {
     if(b.dataset.mode === "all"){
@@ -560,6 +697,13 @@ function renderStart(){
     clearHistory();
     renderStart();
   });
+  bindSyncCard();
+  // 已开启云同步时，每次打开首页自动拉取合并一次（本次会话只自动同步一次）；
+  // 若用户已开始答题则只更新本地数据，不重绘页面
+  if(!autoSyncDone && getSyncCode()){
+    autoSyncDone = true;
+    syncNow().then(ok => { if(ok && app.querySelector(".hero")) renderStart(); }).catch(() => {});
+  }
 }
 
 function startQuiz(pool, modeName, bankMode){

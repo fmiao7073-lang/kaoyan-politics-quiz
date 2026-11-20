@@ -112,6 +112,15 @@ main .wrap{padding-top:28px;padding-bottom:64px}
 .history-empty{font-size:14px;color:var(--ink-3);padding:8px 0 4px}
 .trend{margin:4px 0 14px}
 .trend svg{width:100%;height:auto;display:block}
+/* ---------- 云同步 ---------- */
+.sync-card{margin:8px 0 24px;border-top:1px dashed var(--line);padding-top:16px}
+.sync-tip{font-size:14px;color:var(--ink-2);margin-bottom:10px}
+.sync-tip b{color:var(--vermilion)}
+.sync-row{display:flex;gap:10px}
+.sync-row input{flex:1;min-height:38px;padding:0 12px;border:1px solid var(--line);border-radius:8px;background:var(--paper);font:inherit;font-size:14px;color:var(--ink)}
+.sync-row input:focus{outline:2px solid var(--vermilion);outline-offset:1px;border-color:var(--vermilion)}
+.sync-status{font-size:13px;color:var(--ink-3);margin-top:8px;min-height:1em}
+.sync-status.bad{color:var(--red)}
 @media (max-width:480px){
   .history th:nth-child(5),.history td:nth-child(5){display:none}
 }
